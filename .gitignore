@@ -1,3 +1,8 @@
 .idea/
 *.iml
 out/
+*.zip
+logs/
+ddd/
+ddd1/
+ddd2/

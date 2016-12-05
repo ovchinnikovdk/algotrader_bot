@@ -1,0 +1,30 @@
+package ru.sbt.exchange.genetic.chromosome;
+
+import ru.sbt.exchange.client.Broker;
+import ru.sbt.exchange.domain.ExchangeEvent;
+import ru.sbt.exchange.domain.Order;
+import ru.sbt.exchange.domain.OrderBuilder;
+import ru.sbt.exchange.domain.instrument.Instruments;
+
+/**
+ * Created by dmitry on 06.12.16.
+ */
+public class ZeroSellerChromosome implements Chromosome {
+    private Order order;
+
+    @Override
+    public void run(ExchangeEvent event, Broker broker) {
+        /*order = OrderBuilder.sell(Instruments.zeroCouponBond())
+                .withPrice(Instruments.zeroCouponBond().getNominal())
+                .withQuantity(1)
+                .order();
+                */
+        order = event.getOrder().opposite();
+        broker.addOrder(order);
+    }
+
+    @Override
+    public String getId() {
+        return order.getOrderId();
+    }
+}
