@@ -8,15 +8,17 @@ import ru.sbt.exchange.domain.instrument.Instruments;
 /**
  * Created by dmitry on 06.12.16.
  */
-public class ZeroBuyerChromosome implements Chromosome {
+public class FloatingBuyerChromosome implements Chromosome {
     private Order order;
+
     @Override
     public void run(ExchangeEvent event, Broker broker) {
         if (broker.getMyPortfolio().getMoney() < 0) return;
         if (broker.getMyLiveOrders().size() > 2) return;
-        order = broker.getTopOrders(Instruments.zeroCouponBond()).getSellOrders().get(0).opposite();
-        order = order.withPrice(Instruments.zeroCouponBond().getNominal() * 0.55);
-        order = order.withQuantity((int) (broker.getMyPortfolio().getMoney() / order.getPrice() * 2));
+        double nominal = Instruments.floatingCouponBond().getNominal();
+        order = broker.getTopOrders(Instruments.floatingCouponBond())
+                .getSellOrders().get(0).opposite()
+                .withPrice(nominal);
         broker.addOrder(order);
     }
 

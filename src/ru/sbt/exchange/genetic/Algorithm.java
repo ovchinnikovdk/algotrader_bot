@@ -43,6 +43,8 @@ public class Algorithm {
 
 
     private Individ mutate(Individ individ) {
-        return individ;
+        Individ individ1 = new Individ();
+        individ1.generate();
+        return crossover(individ1, individ);
     }
 }

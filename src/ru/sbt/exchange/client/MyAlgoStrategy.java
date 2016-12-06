@@ -20,7 +20,10 @@ public class MyAlgoStrategy implements AlgoStrategy {
     @Override
     public void onEvent(ExchangeEvent event, Broker broker) {
         algorithm.runPopulation(event, broker);
-        if (broker.getPeriodInfo().getSecondsToNextPeriod() < 2) {
+        if (broker.getPeriodInfo().getSecondsToNextPeriod() <= 1) {
+            broker.cancelOrdersByInstrument(Instruments.fixedCouponBond());
+            broker.cancelOrdersByInstrument(Instruments.floatingCouponBond());
+            broker.cancelOrdersByInstrument(Instruments.zeroCouponBond());
             algorithm.nextPopulation();
         }
     }

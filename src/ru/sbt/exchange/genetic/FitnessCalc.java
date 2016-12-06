@@ -10,6 +10,6 @@ public class FitnessCalc {
 
 
     public static float calcGen(Chromosome gene) {
-        return Algorithm.random.nextFloat() % 5;
+        return 10.0f;
     }
 }

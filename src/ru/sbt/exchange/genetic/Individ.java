@@ -50,6 +50,7 @@ public class Individ {
         for (int i = 0; i < genes.length; i++) {
             genes[i] = getRandomChromosome();
         }
+        curSize = genes.length;
     }
 
     public float getFitness() {
@@ -76,10 +77,12 @@ public class Individ {
 
     public Chromosome getRandomChromosome() {
         List<Class<? extends  Chromosome>> list = new ArrayList<>();
-        list.add(DummyChromosome.class);
         list.add(FixedSellerChromosome.class);
         list.add(ZeroBuyerChromosome.class);
         list.add(ZeroSellerChromosome.class);
+        list.add(FixedBuyerChromosome.class);
+        list.add(FloatingSellerChromosome.class);
+        list.add(FloatingBuyerChromosome.class);
         try {
             return list.get(Algorithm.random.nextInt(list.size())).newInstance();
         } catch (InstantiationException e) {

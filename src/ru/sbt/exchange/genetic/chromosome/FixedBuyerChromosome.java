@@ -6,17 +6,21 @@ import ru.sbt.exchange.domain.Order;
 import ru.sbt.exchange.domain.instrument.Instruments;
 
 /**
- * Created by dmitry on 06.12.16.
+ * Created by mika on 06.12.16.
  */
-public class ZeroBuyerChromosome implements Chromosome {
+public class FixedBuyerChromosome implements Chromosome {
     private Order order;
+
     @Override
     public void run(ExchangeEvent event, Broker broker) {
         if (broker.getMyPortfolio().getMoney() < 0) return;
         if (broker.getMyLiveOrders().size() > 2) return;
-        order = broker.getTopOrders(Instruments.zeroCouponBond()).getSellOrders().get(0).opposite();
-        order = order.withPrice(Instruments.zeroCouponBond().getNominal() * 0.55);
-        order = order.withQuantity((int) (broker.getMyPortfolio().getMoney() / order.getPrice() * 2));
+        order =  broker.getTopOrders(Instruments.fixedCouponBond()).getSellOrders().get(0)
+                .opposite();
+        double price = order.getPrice() * 0.85;
+        order = order.withPrice(price);
+        order = order.withQuantity((int) Math.max(broker.getMyPortfolio().getMoney() / 2 * price, 1));
+
         broker.addOrder(order);
     }
 
