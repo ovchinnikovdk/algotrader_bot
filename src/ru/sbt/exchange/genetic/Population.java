@@ -7,48 +7,44 @@ import ru.sbt.exchange.domain.ExchangeEvent;
  * Created by dmitry on 05.12.16.
  */
 public class Population {
-    public static final int DEFAULT_SIZE = 5;
+    public static final int DEFAULT_SIZE = 7;
 
-    private Individ[] individs;
+    private Individual[] individuals;
     private int curSize;
     private float[] weights;
+    private int currentRunning;
 
     public Population(boolean init) {
-        this.individs = new Individ[DEFAULT_SIZE];
+        this.individuals = new Individual[DEFAULT_SIZE];
         this.weights = new float[DEFAULT_SIZE];
         this.curSize = 0;
+        this.currentRunning = 0;
         if (init) {
-            for (int i = 0; i < individs.length; i++) {
-                Individ individ = new Individ();
-                individ.generate();
-                individs[i] = individ;
+            for (int i = 0; i < individuals.length; i++) {
+                Individual individual = new Individual();
+                individual.generate();
+                individuals[i] = individual;
             }
-            curSize = individs.length;
+            curSize = individuals.length;
         }
     }
 
-    public Individ getFittest() {
-        Individ fittest = individs[0];
+    public Individual getFittest() {
+        Individual fittest = individuals[0];
         for (int i = 1; i < curSize; i++) {
-            if (fittest.getFitness() < individs[i].getFitness()) {
-                fittest = individs[i];
+            if (fittest.getFitness() < individuals[i].getFitness()) {
+                fittest = individuals[i];
             }
         }
         return fittest;
     }
 
-    public void add(Individ ind) {
-        individs[curSize++] = ind;
+    public void add(Individual ind) {
+        individuals[curSize++] = ind;
     }
 
-    public Individ get(int index) {
-        if (index < curSize) {
-            return individs[index];
-        }
-        return null;
-    }
 
-    public Individ getRandom() {
+    public Individual getRandom() {
         calcWeights();
         float sum = 0.0f;
         for (float f : weights) {
@@ -59,10 +55,10 @@ public class Population {
         for (int i = 0; i < curSize - 1; i++) {
             curSum += weights[i];
             if (curSum <= rand && curSum + weights[i + 1] > rand) {
-                return individs[i];
+                return individuals[i];
             }
             if (i == curSize - 2) {
-                return individs[i + 1];
+                return individuals[i + 1];
             }
         }
         return null;
@@ -70,13 +66,14 @@ public class Population {
 
     public void calcWeights(){
         for (int i = 0; i < curSize; i++) {
-            weights[i] = individs[i].getFitness();
+            weights[i] = individuals[i].getFitness();
         }
     }
 
     public void run(ExchangeEvent event, Broker broker) {
-        for (int i = 0; i < curSize; i++) {
-            individs[i].run(event, broker);
+        Individual individual = getRandom();
+        if (FitnessCalc.calcIndividual(individual) > 1.0f) {
+            individual.run(event, broker);
         }
     }
 }
