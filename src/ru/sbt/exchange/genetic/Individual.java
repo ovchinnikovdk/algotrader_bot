@@ -1,6 +1,7 @@
 package ru.sbt.exchange.genetic;
 
 import ru.sbt.exchange.client.Broker;
+import ru.sbt.exchange.domain.Direction;
 import ru.sbt.exchange.domain.ExchangeEvent;
 import ru.sbt.exchange.domain.Order;
 import ru.sbt.exchange.domain.OrderBuilder;
@@ -12,7 +13,7 @@ import java.util.HashMap;
 import java.util.Map;
 
 /**
- * Created by dmitry on 05.12.16.
+ * Created by mika on 05.12.16.
  */
 public class Individual {
 
@@ -22,6 +23,29 @@ public class Individual {
 
     public Individual() {
         this.genesMap = new HashMap<>();
+    }
+
+    public Individual(Order order) {
+        this.genesMap = new HashMap<>();
+        genesMap.put("price", (float)order.getPrice());
+        genesMap.put("quantity", (float)order.getQuantity());
+        float type;
+        if (order.getInstrument().getName().equals("zeroCouponBond")) {
+            type = 0.0f;
+        }
+        else if (order.getInstrument().getName().equals("fixedCouponBond")) {
+            type = 1.0f;
+        }
+        else {
+            type = 2.0f;
+        }
+        genesMap.put("coupon", type);
+        if (order.getDirection() == Direction.SELL) {
+            genesMap.put("type", 0.0f);
+        }
+        else {
+            genesMap.put("type", 1.0f);
+        }
     }
 
 
@@ -35,7 +59,8 @@ public class Individual {
         genesMap.put("coupon", coupon);
         //price
         float price;
-        switch ((int)Math.ceil(coupon)) {
+        float quantity;
+        switch ((int)coupon) {
             case 0:
                 double nominal = Instruments.zeroCouponBond().getNominal();
                 if (sell) {
@@ -44,6 +69,8 @@ public class Individual {
                 else {
                     price = (float) (nominal * 0.7 - 0.4 * nominal * Algorithm.random.nextFloat());
                 }
+                quantity = (float)Algorithm.random.nextInt(200);
+                genesMap.put("quantity", quantity);
                 break;
             case 1:
                 nominal = Instruments.fixedCouponBond().getNominal();
@@ -55,6 +82,8 @@ public class Individual {
                     price = (float) (nominal + (Algorithm.random.nextBoolean() ? 1 : -1)
                             * 2 * fixed * nominal * Algorithm.random.nextFloat());
                 }
+                quantity = (float)Algorithm.random.nextInt(500);
+                genesMap.put("quantity", quantity);
                 break;
             case 2:
                 nominal = Instruments.floatingCouponBond().getNominal();
@@ -66,15 +95,15 @@ public class Individual {
                     price = (float) (nominal + (Algorithm.random.nextBoolean() ? 1 : -1)
                     * 2 * floating.getMin() / 100.0f * nominal * Algorithm.random.nextFloat());
                 }
+                quantity = (float)Algorithm.random.nextInt(500);
+                genesMap.put("quantity", quantity);
                 break;
             default:
-                price = sell ? 1000.0f : 50.0f;
+                price = sell ? 112.0f : 88.0f;
         }
         genesMap.put("price", price);
-
-        //quantity
-        float quantity = (float)Algorithm.random.nextInt(40);
-        genesMap.put("quantity", quantity);
+        /*System.out.println("AddOrder: price=" + genesMap.get("price") + " quantity=" + genesMap.get("quantity") +
+                " direction=" + genesMap.get("type") + " coupon=" + genesMap.get("coupon"));*/
     }
 
     public float get(String key) {
@@ -85,9 +114,6 @@ public class Individual {
         this.genesMap.put(key, value);
     }
 
-    public String getId() {
-        return id;
-    }
 
     public float getFitness() {
         if (fitness == null) {
@@ -96,8 +122,12 @@ public class Individual {
         return fitness;
     }
 
+    public void recalculateFitness(){
+        fitness = FitnessCalc.calcIndividual(this);
+    }
 
-    public void run(ExchangeEvent event, Broker broker) {
+    public void run(Broker broker) {
+
         OrderBuilder orderBuilder;
         if (genesMap.get("type") < 0.5) {
             float coupon = genesMap.get("coupon");

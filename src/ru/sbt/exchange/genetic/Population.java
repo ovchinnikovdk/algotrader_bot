@@ -4,21 +4,21 @@ import ru.sbt.exchange.client.Broker;
 import ru.sbt.exchange.domain.ExchangeEvent;
 
 /**
- * Created by dmitry on 05.12.16.
+ * Created by mika on 05.12.16.
  */
 public class Population {
-    public static final int DEFAULT_SIZE = 7;
+    public static final int DEFAULT_SIZE = 20;
 
     private Individual[] individuals;
     private int curSize;
     private float[] weights;
-    private int currentRunning;
+    private int doingNothingCount;
 
     public Population(boolean init) {
         this.individuals = new Individual[DEFAULT_SIZE];
         this.weights = new float[DEFAULT_SIZE];
         this.curSize = 0;
-        this.currentRunning = 0;
+        this.doingNothingCount = 1;
         if (init) {
             for (int i = 0; i < individuals.length; i++) {
                 Individual individual = new Individual();
@@ -45,7 +45,6 @@ public class Population {
 
 
     public Individual getRandom() {
-        calcWeights();
         float sum = 0.0f;
         for (float f : weights) {
             sum += f;
@@ -64,16 +63,25 @@ public class Population {
         return null;
     }
 
-    public void calcWeights(){
+    public void reCalcWeights(){
         for (int i = 0; i < curSize; i++) {
+            individuals[i].recalculateFitness();
             weights[i] = individuals[i].getFitness();
         }
     }
 
-    public void run(ExchangeEvent event, Broker broker) {
+    public void run(Broker broker) throws TooLongDoingNothingException {
+        if (doingNothingCount % 10 == 0) {
+            throw new TooLongDoingNothingException();
+        }
         Individual individual = getRandom();
         if (FitnessCalc.calcIndividual(individual) > 1.0f) {
-            individual.run(event, broker);
+            individual.run(broker);
+            return;
+        }
+        else {
+            doingNothingCount++;
+            run(broker);
         }
     }
 }

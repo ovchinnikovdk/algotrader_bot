@@ -12,6 +12,6 @@ public class Main {
         runner.runClient("ddd", new MyAlgoStrategy());
         runner.runClient("ddd1", new MyAlgoStrategy());
         runner.runClient("ddd2", new MyAlgoStrategy());
-        */
+*/
     }
 }

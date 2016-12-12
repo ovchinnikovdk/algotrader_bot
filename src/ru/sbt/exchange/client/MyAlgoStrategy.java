@@ -9,24 +9,33 @@ import ru.sbt.exchange.genetic.FitnessCalc;
 public class MyAlgoStrategy implements AlgoStrategy {
 
     private Algorithm algorithm;
+    private int noMyDeals;
 
     public MyAlgoStrategy() {
+        noMyDeals = 1;
         algorithm = new Algorithm();
     }
 
     @Override
     public void onEvent(ExchangeEvent event, Broker broker) {
         FitnessCalc.setBroker(broker);
-        if (event.getExchangeEventType() == ExchangeEventType.ORDER_EXECUTION
-                && FitnessCalc.containsMyOrder(event.getOrder().getOrderId())) {
-            FitnessCalc.addSuccessfulOrder(event.getOrder().getOrderId());
-        }
-        algorithm.runPopulation(event, broker);
-        if (broker.getPeriodInfo().getSecondsToNextPeriod() <= 1) {
+        if (event.getExchangeEventType() == ExchangeEventType.NEW_PERIOD_START) {
             broker.cancelOrdersByInstrument(Instruments.fixedCouponBond());
             broker.cancelOrdersByInstrument(Instruments.floatingCouponBond());
             broker.cancelOrdersByInstrument(Instruments.zeroCouponBond());
-            algorithm.nextPopulation();
+            algorithm.nextPopulation(event);
         }
+        if (event.getExchangeEventType() == ExchangeEventType.ORDER_EXECUTION) {
+            if (FitnessCalc.containsMyOrder(event.getOrder().getOrderId())) {
+                FitnessCalc.addSuccessfulOrder(event.getOrder().getOrderId());
+            }
+            else {
+                noMyDeals++;
+                if (noMyDeals % 15 == 0) {
+                    algorithm.nextPopulation(event);
+                }
+            }
+        }
+        algorithm.runPopulation(event, broker);
     }
 }
