@@ -4,38 +4,43 @@ import ru.sbt.exchange.domain.ExchangeEvent;
 import ru.sbt.exchange.domain.ExchangeEventType;
 import ru.sbt.exchange.domain.instrument.Instruments;
 import ru.sbt.exchange.genetic.Algorithm;
-import ru.sbt.exchange.genetic.FitnessCalc;
+
+import java.util.HashSet;
+import java.util.Set;
 
 public class MyAlgoStrategy implements AlgoStrategy {
 
     private Algorithm algorithm;
-    private int noMyDeals;
+    private int dealsCount;
 
     public MyAlgoStrategy() {
-        noMyDeals = 1;
+        dealsCount = 1;
         algorithm = new Algorithm();
     }
 
     @Override
     public void onEvent(ExchangeEvent event, Broker broker) {
-        FitnessCalc.setBroker(broker);
+        algorithm.getFitnessFunction().setBroker(broker);
+        if (event.getExchangeEventType() == ExchangeEventType.ORDER_EXECUTION) {
+            dealsCount++;
+            if (dealsCount % 15 == 0) {
+                broker.cancelOrdersByInstrument(Instruments.fixedCouponBond());
+                broker.cancelOrdersByInstrument(Instruments.floatingCouponBond());
+                broker.cancelOrdersByInstrument(Instruments.zeroCouponBond());
+                algorithm.nextPopulation(event);
+            }
+            else if (dealsCount % 7 == 0) {
+                broker.cancelOrdersByInstrument(Instruments.fixedCouponBond());
+                broker.cancelOrdersByInstrument(Instruments.floatingCouponBond());
+                broker.cancelOrdersByInstrument(Instruments.zeroCouponBond());
+            }
+        }
+        algorithm.runPopulation(event, broker);
         if (event.getExchangeEventType() == ExchangeEventType.NEW_PERIOD_START) {
             broker.cancelOrdersByInstrument(Instruments.fixedCouponBond());
             broker.cancelOrdersByInstrument(Instruments.floatingCouponBond());
             broker.cancelOrdersByInstrument(Instruments.zeroCouponBond());
             algorithm.nextPopulation(event);
         }
-        if (event.getExchangeEventType() == ExchangeEventType.ORDER_EXECUTION) {
-            if (FitnessCalc.containsMyOrder(event.getOrder().getOrderId())) {
-                FitnessCalc.addSuccessfulOrder(event.getOrder().getOrderId());
-            }
-            else {
-                noMyDeals++;
-                if (noMyDeals % 15 == 0) {
-                    algorithm.nextPopulation(event);
-                }
-            }
-        }
-        algorithm.runPopulation(event, broker);
     }
 }

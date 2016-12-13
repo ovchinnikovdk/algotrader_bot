@@ -46,4 +46,8 @@ public class OrderBuilder {
     public Order order() {
         return new Order(id == null ? generateOrderId() : id, instrument, direction, price, quantity);
     }
+
+    public Order withPrice() {
+        return null;
+    }
 }

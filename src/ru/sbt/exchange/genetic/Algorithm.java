@@ -13,9 +13,11 @@ public class Algorithm {
     public static Random random = new Random();
 
     private Population population;
+    private FitnessFunction fitnessFunction;
 
     public Algorithm() {
-        population = new Population(true);
+        fitnessFunction = new FitnessByAll();
+        population = new Population(true, fitnessFunction);
     }
 
     public void runPopulation(ExchangeEvent event, Broker broker){
@@ -27,17 +29,17 @@ public class Algorithm {
     }
 
     public void nextPopulation(ExchangeEvent event) {
-        Population population1 = new Population(false);
+        Population population1 = new Population(false, fitnessFunction);
         Individual fittest = this.population.getFittest();
         population1.add(fittest);
         for (int i = 1; i < this.population.DEFAULT_SIZE; i++) {
             Individual ind1 = this.population.getRandom();
             Individual ind2 = this.population.getRandom();
             float rand = random.nextFloat();
-            if (rand < 0.7)  {
+            if (rand < 0.4)  {
                 population1.add(crossover(ind1, ind2));
             }
-            else if (rand < 0.9) {
+            else if (rand <= 0.6) {
                 population1.add(mutate(crossover(ind1, ind2)));
             }
             else {
@@ -89,5 +91,9 @@ public class Algorithm {
         Individual individual1 = new Individual();
         individual1.generate();
         return crossover(individual1, individual);
+    }
+
+    public FitnessFunction getFitnessFunction(){
+        return this.fitnessFunction;
     }
 }

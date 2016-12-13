@@ -7,14 +7,16 @@ import ru.sbt.exchange.domain.ExchangeEvent;
  * Created by mika on 05.12.16.
  */
 public class Population {
-    public static final int DEFAULT_SIZE = 20;
+    public static final int DEFAULT_SIZE = 50;
 
     private Individual[] individuals;
     private int curSize;
     private float[] weights;
     private int doingNothingCount;
+    private FitnessFunction fitnessFunction;
 
-    public Population(boolean init) {
+    public Population(boolean init, FitnessFunction fitnessFunction) {
+        this.fitnessFunction = fitnessFunction;
         this.individuals = new Individual[DEFAULT_SIZE];
         this.weights = new float[DEFAULT_SIZE];
         this.curSize = 0;
@@ -24,6 +26,7 @@ public class Population {
                 Individual individual = new Individual();
                 individual.generate();
                 individuals[i] = individual;
+                weights[i] = 1.0f;
             }
             curSize = individuals.length;
         }
@@ -65,7 +68,7 @@ public class Population {
 
     public void reCalcWeights(){
         for (int i = 0; i < curSize; i++) {
-            individuals[i].recalculateFitness();
+            individuals[i].setFitness(fitnessFunction.calcIndividual(individuals[i]));
             weights[i] = individuals[i].getFitness();
         }
     }
@@ -75,13 +78,11 @@ public class Population {
             throw new TooLongDoingNothingException();
         }
         Individual individual = getRandom();
-        if (FitnessCalc.calcIndividual(individual) > 1.0f) {
+        if (individual.getFitness() > 1.08f  ) {
             individual.run(broker);
-            return;
         }
         else {
             doingNothingCount++;
-            run(broker);
         }
     }
 }
